@@ -1,0 +1,11 @@
+{
+  "n_recordings": 15555,
+  "n_speakers": 1119,
+  "auc_per_record": 0.7644593326894301,
+  "auc_per_speaker": 0.8662813486131873,
+  "auc_per_speaker_ci95": [
+    0.8438814851931531,
+    0.8878918817244777
+  ],
+  "accuracy_per_speaker": 0.8042895442359249
+}
