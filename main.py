@@ -229,7 +229,6 @@ def graphs():
     plt.title("ROC - voice disorder from a vowel (per speaker)")
     plt.legend(loc="lower right", fontsize=9); plt.tight_layout()
     plt.savefig(OUT / "roc_curve.png", dpi=150); plt.close()
-    # Pages serves docs/ alone, so it needs its own copy of the curve it shows
     shutil.copyfile(OUT / "roc_curve.png", DOCS / "roc_curve.png")
 
     part = pred[pred["split"] == "test"]
@@ -277,8 +276,6 @@ def create_app():
     smile = opensmile.Smile(feature_set=opensmile.FeatureSet.eGeMAPSv02,
                             feature_level=opensmile.FeatureLevel.Functionals)
 
-    # serve docs/ itself rather than a second copy of the page: the same file is
-    # what GitHub Pages publishes, and it picks its API host from the origin
     app = Flask(__name__, static_folder=str(HERE / "docs"), static_url_path="")
     app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 

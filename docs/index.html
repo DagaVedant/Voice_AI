@@ -78,8 +78,6 @@
 </div>
 
 <script>
-// this page is served two ways: by GitHub Pages, where scoring lives on another
-// host, and by `python main.py serve`, where it is same-origin and api is ""
 const BACKEND = "https://voice-ai-whpy.onrender.com";
 const api = location.hostname.endsWith("github.io") ? BACKEND.replace(/\/+$/, "") : "";
 
@@ -90,8 +88,6 @@ const statusEl = document.getElementById("status");
 const resultEl = document.getElementById("result");
 let audioCtx, source, processor, stream, chunks = [], recording = false, t0 = 0, timer;
 
-// free hosts sleep when idle; start waking it now so it is warm by the time the
-// user has finished recording
 fetch(api + "/health").catch(() => {});
 
 recBtn.onclick = () => (recording ? stop() : start());
