@@ -4,8 +4,6 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    # one worker keeps memory under the 512 MB free-tier cap; inference is slow
-    # enough (openSMILE + SVM) that the default 30s timeout is too tight
     startCommand: gunicorn wsgi:app --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT
     healthCheckPath: /health
     envVars:

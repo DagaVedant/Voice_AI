@@ -257,7 +257,6 @@ def graphs():
 
 
 def create_app():
-    """Build the Flask app. Imported by wsgi.py so gunicorn can serve it."""
     import joblib
     import librosa
     import opensmile
@@ -276,7 +275,6 @@ def create_app():
     app = Flask(__name__, template_folder=str(HERE / "templates"))
     app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 
-    # the Pages frontend lives on a different origin, so it needs explicit permission
     origins = [o.strip() for o in
                os.environ.get("ALLOWED_ORIGINS", DEFAULT_ORIGINS).split(",") if o.strip()]
     CORS(app, resources={r"/predict": {"origins": origins},

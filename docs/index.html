@@ -86,11 +86,8 @@
 </div>
 
 <script>
-// ---------------------------------------------------------------------------
-// Set this to your deployed backend, with no trailing slash.
-// e.g. "https://voice-ai-backend.onrender.com"
-const BACKEND = "";
-// ---------------------------------------------------------------------------
+
+const BACKEND = "https://voice-ai-whpy.onrender.com/";
 
 const api = BACKEND.replace(/\/+$/, "");
 const recBtn = document.getElementById("rec");
@@ -105,8 +102,6 @@ if (!api) {
   recBtn.disabled = true;
   fileIn.disabled = true;
 } else {
-  // free hosts sleep when idle; wake the server now so it is warm by the time
-  // the user has finished recording
   fetch(api + "/health").catch(() => {});
 }
 
@@ -147,7 +142,6 @@ function flatten(bufs) {
   return out;
 }
 
-// downsample to 16 kHz mono 16-bit PCM WAV
 function encodeWav(samples, srcRate) {
   const dstRate = 16000;
   const ratio = srcRate / dstRate;
@@ -176,8 +170,6 @@ async function send(blob) {
   fd.append("audio", blob, "voice.wav");
 
   const ctrl = new AbortController();
-  // a sleeping free-tier server can take ~50s to boot, so say so rather than
-  // sitting on "Analyzing..." with no explanation
   const slow = setTimeout(() => {
     statusEl.textContent = "Waking the scoring server - this can take up to a minute the first time.";
   }, 4000);

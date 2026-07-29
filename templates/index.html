@@ -119,7 +119,6 @@ function flatten(bufs) {
   return out;
 }
 
-// downsample to 16 kHz mono 16-bit PCM WAV
 function encodeWav(samples, srcRate) {
   const dstRate = 16000;
   const ratio = srcRate / dstRate;
