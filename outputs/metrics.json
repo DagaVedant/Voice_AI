@@ -1,11 +1,30 @@
 {
-  "n_recordings": 15555,
-  "n_speakers": 1119,
-  "auc_per_record": 0.7644593326894301,
-  "auc_per_speaker": 0.8662813486131873,
-  "auc_per_speaker_ci95": [
-    0.8438814851931531,
-    0.8878918817244777
-  ],
-  "accuracy_per_speaker": 0.8042895442359249
+  "validation": {
+    "n_recordings": 12373,
+    "n_speakers": 895,
+    "auc_per_record": 0.7500141571681934,
+    "auc_per_speaker": 0.8566490698843641,
+    "auc_per_speaker_ci95": [
+      0.8317390146932362,
+      0.881585955080505
+    ],
+    "accuracy_per_speaker": 0.7865921787709497
+  },
+  "test": {
+    "n_recordings": 3182,
+    "n_speakers": 224,
+    "auc_per_record": 0.7677221822705869,
+    "auc_per_speaker": 0.8541414141414142,
+    "auc_per_speaker_ci95": [
+      0.8052819756130475,
+      0.9010113572945432
+    ],
+    "accuracy_per_speaker": 0.7946428571428571
+  },
+  "split": {
+    "test_fraction": 0.2,
+    "seed": 42,
+    "dev_speakers": 895,
+    "test_speakers": 224
+  }
 }

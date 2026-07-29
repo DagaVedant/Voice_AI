@@ -29,14 +29,12 @@ origin, so the defaults it offers are already correct. `outputs/model.pkl` is
 committed, so nothing needs training on the server. Set `ALLOWED_ORIGINS` to your
 Pages origin if it differs from the default.
 
-**Frontend (GitHub Pages).** Set `BACKEND` at the top of the script in
-[docs/index.html](docs/index.html) to the Render URL, commit, then Settings →
-Pages → Deploy from a branch → `main` / `/docs`.
-
-[docs/index.html](docs/index.html) is a deployed copy of
-[templates/index.html](templates/index.html), not a replacement — `python main.py serve`
-still runs the whole thing from one process locally. Edits to the demo page need
-applying to both.
+**Frontend (GitHub Pages).** Settings → Pages → Deploy from a branch → `main` /
+`/docs`. [docs/index.html](docs/index.html) picks its API host from the origin it
+is served on: on `github.io` it calls the Render backend, and everywhere else it
+calls the same origin, so `python main.py serve` runs the identical file locally
+from one process. There is one page, not a copy to keep in sync; set `BACKEND` at
+the top of its script if your Render URL differs.
 
 ## The pipeline
 
@@ -121,10 +119,9 @@ required attribution, and BibTeX for the three works to cite:
 |---|---|
 | `main.py` | the whole pipeline |
 | `data/svd_boost_features.csv` | the feature table: required by `train`, or rebuild it with `collect` |
-| `templates/index.html` | the demo page: required by `serve` |
+| `docs/index.html` | the demo page: served by `serve` locally and by GitHub Pages when deployed |
 | `outputs/model.pkl` | written by `train`, so train once before serving |
 | `wsgi.py`, `render.yaml` | the deployed backend: gunicorn entrypoint and Render config |
-| `docs/` | the deployed frontend, served by GitHub Pages |
 
 ## Licensing
 
@@ -132,7 +129,7 @@ Two licenses, covering different things:
 
 | | |
 |---|---|
-| **Code** (`main.py`, `predict.py`, `wsgi.py`, `templates/`, `docs/`) | MIT (see [LICENSE](LICENSE)) |
+| **Code** (`main.py`, `predict.py`, `wsgi.py`, `docs/`) | MIT (see [LICENSE](LICENSE)) |
 | **Data** (`data/`) | CC BY 4.0, inherited from the SVD (see [data/README.md](data/README.md)) |
 
 Neither license extends to the other. If you redistribute the feature table or

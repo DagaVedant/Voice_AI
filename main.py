@@ -2,6 +2,7 @@ import argparse
 import io
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -11,6 +12,7 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 DATA = HERE / "data" / "svd_boost_features.csv"
 OUT = HERE / "outputs"
+DOCS = HERE / "docs"
 SEED = 42
 SAMPLE_RATE = 16000
 TEST_FRACTION = 0.2
@@ -227,6 +229,8 @@ def graphs():
     plt.title("ROC - voice disorder from a vowel (per speaker)")
     plt.legend(loc="lower right", fontsize=9); plt.tight_layout()
     plt.savefig(OUT / "roc_curve.png", dpi=150); plt.close()
+    # Pages serves docs/ alone, so it needs its own copy of the curve it shows
+    shutil.copyfile(OUT / "roc_curve.png", DOCS / "roc_curve.png")
 
     part = pred[pred["split"] == "test"]
     which = "held-out test"
@@ -253,7 +257,8 @@ def graphs():
     plt.xlabel("mutual information with diagnosis"); plt.title("Top 15 voice features")
     plt.tight_layout(); plt.savefig(OUT / "feature_importance.png", dpi=150); plt.close()
 
-    print("saved: outputs/roc_curve.png, confusion_matrix.png, feature_importance.png")
+    print("saved: outputs/roc_curve.png (also copied to docs/), "
+          "confusion_matrix.png, feature_importance.png")
 
 
 def create_app():
@@ -261,7 +266,7 @@ def create_app():
     import librosa
     import opensmile
     import soundfile as sf
-    from flask import Flask, jsonify, render_template, request, send_from_directory
+    from flask import Flask, jsonify, request
     from flask_cors import CORS
 
     if not (OUT / "model.pkl").exists():
@@ -272,7 +277,9 @@ def create_app():
     smile = opensmile.Smile(feature_set=opensmile.FeatureSet.eGeMAPSv02,
                             feature_level=opensmile.FeatureLevel.Functionals)
 
-    app = Flask(__name__, template_folder=str(HERE / "templates"))
+    # serve docs/ itself rather than a second copy of the page: the same file is
+    # what GitHub Pages publishes, and it picks its API host from the origin
+    app = Flask(__name__, static_folder=str(HERE / "docs"), static_url_path="")
     app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 
     origins = [o.strip() for o in
@@ -286,11 +293,7 @@ def create_app():
 
     @app.route("/")
     def home():
-        return render_template("index.html")
-
-    @app.route("/outputs/<path:filename>")
-    def outputs(filename):
-        return send_from_directory(OUT, filename)
+        return app.send_static_file("index.html")
 
     @app.errorhandler(413)
     def too_large(_):

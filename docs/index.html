@@ -40,20 +40,12 @@
   .evidence summary { cursor:pointer; color:var(--dim); font-size:14px; }
   .foot { color:var(--dim); font-size:13px; margin-top:8px; }
   code { background:#e7eceb; padding:1px 5px; border-radius:4px; font-size:13px; }
-  .notice { background:#fff6ed; border:1px solid #e8c9a8; color:#7a4b1d; border-radius:10px;
-            padding:14px 16px; font-size:14px; margin-bottom:20px; display:none; }
-  .notice code { background:#f2e2d0; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Voice disorder screener</h1>
-  <p class="sub">An AI model that hears a sustained vowel and estimates the chance of an organic voice disorder. Trained on 1,119 speakers, AUC 0.866.</p>
-
-  <div class="notice" id="notice">
-    No backend configured yet. Deploy the API, then set <code>BACKEND</code> at the top of
-    the script in <code>docs/index.html</code> to its URL.
-  </div>
+  <p class="sub">An AI model that hears a sustained vowel and estimates the chance of an organic voice disorder. Trained on 1,119 speakers, AUC 0.854 on 224 held-out speakers.</p>
 
   <div class="card">
     <p class="prompt">Say &ldquo;aaah&rdquo; and hold it steady for a few seconds.</p>
@@ -76,8 +68,8 @@
   <div class="card evidence">
     <details>
       <summary>How accurate is this model?</summary>
-      <p class="foot">Evaluated speaker-independent (no speaker in both train and test), per-speaker AUC 0.866, 95% CI [0.844, 0.888]. This is a screening aid, not a diagnosis.</p>
-      <img src="roc_curve.png" alt="ROC curve, AUC 0.866">
+      <p class="foot">Evaluated speaker-independent (no speaker in both train and test). On the 224 held-out speakers, scored once: per-speaker AUC 0.854, 95% CI [0.805, 0.901]. Cross-validated on the other 895: AUC 0.857. This is a screening aid, not a diagnosis.</p>
+      <img src="roc_curve.png" alt="ROC curve: validation AUC 0.857, held-out test AUC 0.854">
     </details>
   </div>
 
@@ -86,10 +78,11 @@
 </div>
 
 <script>
+// this page is served two ways: by GitHub Pages, where scoring lives on another
+// host, and by `python main.py serve`, where it is same-origin and api is ""
+const BACKEND = "https://voice-ai-whpy.onrender.com";
+const api = location.hostname.endsWith("github.io") ? BACKEND.replace(/\/+$/, "") : "";
 
-const BACKEND = "https://voice-ai-whpy.onrender.com/";
-
-const api = BACKEND.replace(/\/+$/, "");
 const recBtn = document.getElementById("rec");
 const fileIn = document.getElementById("file");
 const timerEl = document.getElementById("timer");
@@ -97,13 +90,9 @@ const statusEl = document.getElementById("status");
 const resultEl = document.getElementById("result");
 let audioCtx, source, processor, stream, chunks = [], recording = false, t0 = 0, timer;
 
-if (!api) {
-  document.getElementById("notice").style.display = "block";
-  recBtn.disabled = true;
-  fileIn.disabled = true;
-} else {
-  fetch(api + "/health").catch(() => {});
-}
+// free hosts sleep when idle; start waking it now so it is warm by the time the
+// user has finished recording
+fetch(api + "/health").catch(() => {});
 
 recBtn.onclick = () => (recording ? stop() : start());
 fileIn.onchange = () => { if (fileIn.files[0]) send(fileIn.files[0]); };
