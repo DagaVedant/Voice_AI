@@ -17,6 +17,27 @@ seconds, and it extracts the voice features and returns a live prediction with a
 likelihood meter. You can also upload a `.wav`. This is the interactive way to
 test the model; the pipeline below is what produced it.
 
+## Deploying it
+
+The demo is split across two hosts, because GitHub Pages serves static files
+only and the prediction needs a Python process: **the page goes on Pages, the
+scoring API goes on Render.**
+
+**Backend (Render).** New → Web Service → connect this repo. [render.yaml](render.yaml)
+supplies the build and start commands, the health check, and the allowed CORS
+origin, so the defaults it offers are already correct. `outputs/model.pkl` is
+committed, so nothing needs training on the server. Set `ALLOWED_ORIGINS` to your
+Pages origin if it differs from the default.
+
+**Frontend (GitHub Pages).** Set `BACKEND` at the top of the script in
+[docs/index.html](docs/index.html) to the Render URL, commit, then Settings →
+Pages → Deploy from a branch → `main` / `/docs`.
+
+[docs/index.html](docs/index.html) is a deployed copy of
+[templates/index.html](templates/index.html), not a replacement — `python main.py serve`
+still runs the whole thing from one process locally. Edits to the demo page need
+applying to both.
+
 ## The pipeline
 
 Everything lives in **`main.py`**, one subcommand per stage:
@@ -101,7 +122,9 @@ required attribution, and BibTeX for the three works to cite:
 | `main.py` | the whole pipeline |
 | `data/svd_boost_features.csv` | the feature table: required by `train`, or rebuild it with `collect` |
 | `templates/index.html` | the demo page: required by `serve` |
-| `outputs/model.pkl` | written by `train`, not in git, so train once before serving |
+| `outputs/model.pkl` | written by `train`, so train once before serving |
+| `wsgi.py`, `render.yaml` | the deployed backend: gunicorn entrypoint and Render config |
+| `docs/` | the deployed frontend, served by GitHub Pages |
 
 ## Licensing
 
@@ -109,7 +132,7 @@ Two licenses, covering different things:
 
 | | |
 |---|---|
-| **Code** (`main.py`, `predict.py`, `templates/`) | MIT (see [LICENSE](LICENSE)) |
+| **Code** (`main.py`, `predict.py`, `wsgi.py`, `templates/`, `docs/`) | MIT (see [LICENSE](LICENSE)) |
 | **Data** (`data/`) | CC BY 4.0, inherited from the SVD (see [data/README.md](data/README.md)) |
 
 Neither license extends to the other. If you redistribute the feature table or

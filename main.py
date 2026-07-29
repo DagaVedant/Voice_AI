@@ -1,6 +1,7 @@
 import argparse
 import io
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -13,6 +14,8 @@ OUT = HERE / "outputs"
 SEED = 42
 SAMPLE_RATE = 16000
 TEST_FRACTION = 0.2
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+DEFAULT_ORIGINS = "https://dagavedant.github.io,http://localhost:5000,http://127.0.0.1:5000"
 AUDIO_EXTS = {".wav", ".flac", ".ogg", ".mp3", ".m4a", ".aiff"}
 CLASSES = {"healthy": 0, "pathological": 1}
 
@@ -253,12 +256,14 @@ def graphs():
     print("saved: outputs/roc_curve.png, confusion_matrix.png, feature_importance.png")
 
 
-def serve(host="127.0.0.1", port=5000):
+def create_app():
+    """Build the Flask app. Imported by wsgi.py so gunicorn can serve it."""
     import joblib
     import librosa
     import opensmile
     import soundfile as sf
     from flask import Flask, jsonify, render_template, request, send_from_directory
+    from flask_cors import CORS
 
     if not (OUT / "model.pkl").exists():
         sys.exit("no outputs/model.pkl - run `python main.py train` first")
@@ -269,6 +274,17 @@ def serve(host="127.0.0.1", port=5000):
                             feature_level=opensmile.FeatureLevel.Functionals)
 
     app = Flask(__name__, template_folder=str(HERE / "templates"))
+    app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
+
+    # the Pages frontend lives on a different origin, so it needs explicit permission
+    origins = [o.strip() for o in
+               os.environ.get("ALLOWED_ORIGINS", DEFAULT_ORIGINS).split(",") if o.strip()]
+    CORS(app, resources={r"/predict": {"origins": origins},
+                         r"/health": {"origins": origins}})
+
+    @app.route("/health")
+    def health():
+        return jsonify(ok=True)
 
     @app.route("/")
     def home():
@@ -277,6 +293,10 @@ def serve(host="127.0.0.1", port=5000):
     @app.route("/outputs/<path:filename>")
     def outputs(filename):
         return send_from_directory(OUT, filename)
+
+    @app.errorhandler(413)
+    def too_large(_):
+        return jsonify(error="file too large - keep the recording under 25 MB"), 413
 
     @app.route("/predict", methods=["POST"])
     def predict():
@@ -307,8 +327,12 @@ def serve(host="127.0.0.1", port=5000):
             seconds=round(len(signal) / sr, 1),
         )
 
+    return app
+
+
+def serve(host="127.0.0.1", port=5000):
     print(f"open  http://{host}:{port}")
-    app.run(host=host, port=port, debug=False)
+    create_app().run(host=host, port=port, debug=False)
 
 
 def main():

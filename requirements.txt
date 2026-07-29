@@ -7,3 +7,5 @@ librosa
 soundfile
 opensmile
 flask
+flask-cors
+gunicorn
